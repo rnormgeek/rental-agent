@@ -55,24 +55,29 @@ def register_watch() -> dict:
 def list_new_messages(history_id: str) -> list[dict]:
     """Return full message payloads for messages added since history_id."""
     service = get_gmail_service()
-    history = (
+    messages = []
+    while True:
+        history = (
         service.users()
         .history()
         .list(userId="me", startHistoryId=history_id, historyTypes=["messageAdded"])
         .execute()
-    )
-    messages = []
-    for record in history.get("history", []):
-        for added in record.get("messagesAdded", []):
-            msg_id = added["message"]["id"]
-            full = (
-                service.users()
-                .messages()
-                .get(userId="me", id=msg_id, format="full")
-                .execute()
-            )
-            messages.append(full)
-    return messages
+        )
+        next_page_token = history.get("nextPageToken")
+        for record in history.get("history", []):
+            for added in record.get("messagesAdded", []):
+                msg_id = added["message"]["id"]
+                full = (
+                    service.users()
+                    .messages()
+                    .get(userId="me", id=msg_id, format="full")
+                    .execute()
+                )
+                messages.append(full)
+            if not next_page_token:
+                break
+        return messages
+
 
 
 def get_sender(message: dict) -> str:
@@ -93,7 +98,8 @@ def get_html_body(message: dict) -> str:
         if mime_type == "text/html":
             data = payload.get("body", {}).get("data", "")
             # Pad base64url string to a multiple of 4 before decoding
-            return base64.urlsafe_b64decode(data + "==").decode("utf-8", errors="replace")
+            padded_data = data + "=" * 4 - (len(data) % 4)
+            return base64.urlsafe_b64decode(padded_data).decode("utf-8", errors="replace")
         for part in payload.get("parts", []):
             result = _extract(part)
             if result:
