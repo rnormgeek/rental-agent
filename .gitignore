@@ -1,0 +1,7 @@
+.env
+scripts/credentials.json
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+*.egg-info/

@@ -1,0 +1,12 @@
+Bonjour,
+
+Je me permets de vous contacter au sujet de votre annonce intitulée « {title} », située à {location}, proposée à {price}.
+
+Je suis actuellement à la recherche d'un logement stable sur Annecy et votre bien correspond tout à fait à mes critères. Je serais très intéressé(e) par une visite à votre convenance.
+
+Pourriez-vous me contacter afin que nous puissions convenir d'un rendez-vous ?
+
+Dans l'attente de votre réponse, je reste disponible par email ou par téléphone.
+
+Cordialement,
+{user_name}

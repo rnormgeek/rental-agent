@@ -1,0 +1,13 @@
+# Fill in your rental criteria here. Be as specific as possible.
+# The agent will use this text to score each listing from 0 to 100.
+#
+# Examples (uncomment and adjust):
+#
+# - Maximum rent: €1,200/month (charges included if possible)
+# - Minimum surface area: 45 m²
+# - Location: Annecy city centre, Annecy-le-Vieux, Cran-Gevrier, or within 3 km of the lake
+# - Floor: 1st floor or higher (ground floor is a deal-breaker)
+# - At least one separate bedroom (no studio)
+# - Natural light required
+# - Nice to have: balcony or terrace, parking spot, cellar/storage
+# - Deal-breakers: ground floor, busy road noise, no lift above 3rd floor
