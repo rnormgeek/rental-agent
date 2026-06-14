@@ -1,0 +1,26 @@
+project_id = "my-gcp-project-id"
+region     = "us-central1"
+
+service_name        = "rental-agent"
+pubsub_topic        = "rental-emails-topic"
+pubsub_subscription = "rental-emails-sub"
+scheduler_job_name  = "rental-agent-watch-renewal"
+
+# Set to your built image (Artifact Registry or GCR).
+cloud_run_image = "us-central1-docker.pkg.dev/my-gcp-project-id/rental-agent/rental-agent:latest"
+
+# Optional: set if you use a custom domain. If null, integration endpoints
+# use the Cloud Run generated URL output by Terraform.
+service_base_url = null
+
+min_score_to_notify = 50
+approval_ttl_hours  = 48
+firestore_collection = "approvals"
+rental_alert_senders = "alerte@seloger.com,notifications@seloger.com"
+
+cloud_run_memory        = "2Gi"
+cloud_run_cpu           = "1"
+cloud_run_max_instances = 5
+
+scheduler_cron      = "0 9 */6 * *"
+scheduler_time_zone = "Etc/UTC"

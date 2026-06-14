@@ -53,7 +53,8 @@ Runtime flow:
 - config/settings.py: environment-driven configuration
 - config/criteria.txt: your matching criteria
 - config/message_template.txt: contact message template (French)
-- infra/setup.sh: one-time GCP provisioning helper
+- infra/*.tf: Terraform stack for one-time GCP provisioning and Cloud Run wiring
+- infra/setup.sh: legacy one-time provisioning helper (deprecated)
 - scripts/gmail_oauth.py: one-time OAuth flow to obtain Gmail refresh token
 
 ## Requirements
@@ -95,21 +96,50 @@ Edit:
 
 The criteria text is used by the agent to score listings from 0 to 100.
 
-## One-time GCP bootstrap
+## One-time GCP bootstrap (Terraform)
 
-Run:
+1) Move into infra and initialize Terraform
 
-		bash infra/setup.sh
+		cd infra
+		terraform init
 
-This script enables APIs, creates Pub/Sub topic, creates Firestore (if needed), creates a bucket for screenshots, creates service account bindings, and creates empty Secret Manager secrets.
+2) Create your variable file from the example
 
-After that, follow the script output to:
+		cp terraform.tfvars.example terraform.tfvars
 
-- add secret values,
-- deploy Cloud Run,
-- create Pub/Sub push subscription,
-- create Cloud Scheduler job for Gmail watch renewal,
-- enable Firestore TTL on expiresAt for approvals.
+3) Edit terraform.tfvars and set at least:
+
+- project_id
+- cloud_run_image
+
+Optionally set service_base_url if you use a custom domain. If null, Scheduler and Pub/Sub push integrations use the Cloud Run generated URL from Terraform outputs.
+
+4) Plan and apply
+
+		terraform plan
+		terraform apply
+
+Terraform provisions:
+
+- required APIs,
+- Pub/Sub topic + Gmail publisher binding,
+- Firestore native database,
+- screenshot bucket,
+- service account + IAM roles,
+- Secret Manager secret containers,
+- Cloud Run service,
+- Pub/Sub push subscription,
+- Cloud Scheduler renew-watch job.
+
+5) If resources already exist (from previous manual/bootstrap), import them before apply to avoid recreation. Example:
+
+		terraform import google_pubsub_topic.rental_emails rental-emails-topic
+		terraform import google_service_account.app projects/PROJECT_ID/serviceAccounts/rental-agent-sa@PROJECT_ID.iam.gserviceaccount.com
+
+6) Enable Firestore TTL on approvals.expiresAt (still manual)
+
+		gcloud firestore fields ttls update expiresAt \
+			--collection-group=approvals --project YOUR_PROJECT --enable-ttl
 
 ## Gmail OAuth (one time)
 
@@ -205,16 +235,13 @@ If a CAPTCHA is detected during form automation:
 
 ## Deployment
 
-Build/deploy with Cloud Run from source:
+Cloud Run is managed by Terraform and uses the image defined in infra/terraform.tfvars.
 
-		gcloud run deploy rental-agent \
-			--source . \
-			--region YOUR_REGION \
-			--project YOUR_PROJECT \
-			--service-account rental-agent-sa@YOUR_PROJECT.iam.gserviceaccount.com \
-			--memory 2Gi --cpu 1 --max-instances 5
+Typical image build/push flow before terraform apply:
 
-Set required environment variables at deploy time (or via service configuration).
+		gcloud builds submit --tag us-central1-docker.pkg.dev/YOUR_PROJECT/rental-agent/rental-agent:latest .
+
+Then run terraform apply from infra.
 
 ## Operational notes
 
