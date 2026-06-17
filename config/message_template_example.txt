@@ -1,0 +1,1 @@
+Put here the message you want to send to rental ads (copy and rename to message_template.txt)
