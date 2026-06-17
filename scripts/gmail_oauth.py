@@ -15,6 +15,7 @@ Usage:
   pip install google-auth-oauthlib
   python scripts/gmail_oauth.py
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,7 +38,9 @@ def main() -> None:
             "Download it from Google Cloud Console → APIs & Services → Credentials."
         )
 
-    flow = InstalledAppFlow.from_client_secrets_file(str(CREDENTIALS_FILE), scopes=SCOPES)
+    flow = InstalledAppFlow.from_client_secrets_file(
+        str(CREDENTIALS_FILE), scopes=SCOPES
+    )
     creds = flow.run_local_server(port=0)
 
     print("\n" + "=" * 60)

@@ -25,9 +25,13 @@ RENTAL_ALERT_SENDERS: list[str] = os.getenv(
 ).split(",")
 
 # ── Secret Manager — secret IDs (not the values themselves) ──────────────────
-SECRET_GMAIL_REFRESH_TOKEN: str = os.getenv("SECRET_GMAIL_REFRESH_TOKEN", "gmail-refresh-token")
+SECRET_GMAIL_REFRESH_TOKEN: str = os.getenv(
+    "SECRET_GMAIL_REFRESH_TOKEN", "gmail-refresh-token"
+)
 SECRET_GMAIL_CLIENT_ID: str = os.getenv("SECRET_GMAIL_CLIENT_ID", "gmail-client-id")
-SECRET_GMAIL_CLIENT_SECRET: str = os.getenv("SECRET_GMAIL_CLIENT_SECRET", "gmail-client-secret")
+SECRET_GMAIL_CLIENT_SECRET: str = os.getenv(
+    "SECRET_GMAIL_CLIENT_SECRET", "gmail-client-secret"
+)
 SECRET_USER_EMAIL: str = os.getenv("SECRET_USER_EMAIL", "user-email")
 SECRET_USER_NAME: str = os.getenv("SECRET_USER_NAME", "user-name")
 

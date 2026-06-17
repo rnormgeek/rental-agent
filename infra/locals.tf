@@ -8,6 +8,7 @@ locals {
     "secretmanager.googleapis.com",
     "cloudscheduler.googleapis.com",
     "storage.googleapis.com",
+    "cloudtrace.googleapis.com",
   ])
 
   sa_roles = toset([
@@ -17,6 +18,7 @@ locals {
     "roles/pubsub.subscriber",
     "roles/storage.objectAdmin",
     "roles/logging.logWriter",
+    "roles/cloudtrace.agent",
   ])
 
   secrets = {

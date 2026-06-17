@@ -12,7 +12,9 @@ def test_create_approval_request_persists_expected_document(
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(approval_manager, "_db", fake_firestore)
-    monkeypatch.setattr(approval_manager.secrets, "token_urlsafe", lambda _n: "token-123")
+    monkeypatch.setattr(
+        approval_manager.secrets, "token_urlsafe", lambda _n: "token-123"
+    )
 
     token = approval_manager.create_approval_request(
         listing_url=sample_listing["listing_url"],
@@ -42,8 +44,10 @@ def test_create_approval_request_persists_expected_document(
     assert doc["draft_message"] == sample_listing["draft_message"]
 
     ttl = doc["expiresAt"] - doc["createdAt"]
-    assert timedelta(hours=settings.APPROVAL_TTL_HOURS - 1) < ttl < timedelta(
-        hours=settings.APPROVAL_TTL_HOURS + 1
+    assert (
+        timedelta(hours=settings.APPROVAL_TTL_HOURS - 1)
+        < ttl
+        < timedelta(hours=settings.APPROVAL_TTL_HOURS + 1)
     )
 
 

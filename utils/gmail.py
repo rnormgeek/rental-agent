@@ -82,7 +82,6 @@ def list_new_messages(history_id: str) -> list[dict]:
     return messages
 
 
-
 def get_sender(message: dict) -> str:
     """Extract the sender email address from a Gmail message."""
     headers = message.get("payload", {}).get("headers", [])
@@ -101,7 +100,9 @@ def get_html_body(message: dict) -> str:
         if mime_type == "text/html":
             data = payload.get("body", {}).get("data", "")
             padded_data = data + "=" * (-len(data) % 4)
-            return base64.urlsafe_b64decode(padded_data).decode("utf-8", errors="replace")
+            return base64.urlsafe_b64decode(padded_data).decode(
+                "utf-8", errors="replace"
+            )
         for part in payload.get("parts", []):
             result = _extract(part)
             if result:

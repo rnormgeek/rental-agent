@@ -21,7 +21,9 @@ def test_draft_contact_message_renders_all_placeholders(
     template_path.write_text(template, encoding="utf-8")
 
     monkeypatch.setattr(message_drafter, "_TEMPLATE_PATH", template_path)
-    monkeypatch.setattr(message_drafter, "get_secret", lambda *_args, **_kwargs: "Jane Doe")
+    monkeypatch.setattr(
+        message_drafter, "get_secret", lambda *_args, **_kwargs: "Jane Doe"
+    )
 
     rendered = message_drafter.draft_contact_message(
         title="T2 Annecy",

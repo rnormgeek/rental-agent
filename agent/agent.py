@@ -35,7 +35,7 @@ them to the user for review, based on their stated criteria.
 1. **Evaluate the listing** against the criteria above.
    - Assign an integer score from 0 to 100 reflecting how well the listing matches.
    - Be strict: a perfect match is 100, a total mismatch is 0.
-   - Produce a list of 3–5 concise bullet-point reasons explaining the score.
+   - Produce a list of 3-5 concise bullet-point reasons explaining the score.
 
 2. **Score gate:**
    - If score < {threshold}:
@@ -66,7 +66,10 @@ def _load_criteria() -> str:
         text = _CRITERIA_PATH.read_text(encoding="utf-8").strip()
         # Strip comment lines so the LLM only sees actionable criteria
         lines = [ln for ln in text.splitlines() if not ln.strip().startswith("#")]
-        return "\n".join(lines).strip() or "(No criteria defined — fill in config/criteria.txt)"
+        return (
+            "\n".join(lines).strip()
+            or "(No criteria defined — fill in config/criteria.txt)"
+        )
     except FileNotFoundError:
         return "(No criteria defined — fill in config/criteria.txt)"
 
@@ -81,5 +84,10 @@ def create_agent() -> LlmAgent:
         name="rental_screening_agent",
         model="gemini-2.5-flash",
         instruction=system_prompt,
-        tools=[log_rejection, draft_contact_message, create_approval_request, send_approval_email],
+        tools=[
+            log_rejection,
+            draft_contact_message,
+            create_approval_request,
+            send_approval_email,
+        ],
     )

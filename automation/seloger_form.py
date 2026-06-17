@@ -48,11 +48,15 @@ async def _upload_screenshot(screenshot: bytes, token: str) -> str:
     ts = datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     blob_name = f"screenshots/{token}/{ts}.png"
     blob = bucket.blob(blob_name)
-    await asyncio.to_thread(blob.upload_from_string, screenshot, content_type="image/png")
+    await asyncio.to_thread(
+        blob.upload_from_string, screenshot, content_type="image/png"
+    )
     return f"gs://{settings.GCS_BUCKET}/{blob_name}"
 
 
-def _send_captcha_fallback_email(listing_url: str, draft_message: str, token: str) -> None:
+def _send_captcha_fallback_email(
+    listing_url: str, draft_message: str, token: str
+) -> None:
     """Email the user the draft message when a CAPTCHA blocks automatic submission."""
     user_email = get_secret(settings.SECRET_USER_EMAIL)
     html_body = f"""
@@ -158,7 +162,9 @@ async def fill_seloger_form(
                     continue
 
             if not form_opened:
-                raise RuntimeError("Could not find the contact button on the listing page")
+                raise RuntimeError(
+                    "Could not find the contact button on the listing page"
+                )
 
             await page.wait_for_load_state("networkidle", timeout=10_000)
 
@@ -177,7 +183,9 @@ async def fill_seloger_form(
                     )
                     screenshot = await page.screenshot(full_page=False)
                     await _upload_screenshot(screenshot, token)
-                    await asyncio.to_thread(doc_ref.update, {"status": "captcha_fallback"})
+                    await asyncio.to_thread(
+                        doc_ref.update, {"status": "captcha_fallback"}
+                    )
                     await asyncio.to_thread(
                         _send_captcha_fallback_email, listing_url, draft_message, token
                     )

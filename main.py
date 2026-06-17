@@ -9,11 +9,6 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-# Load .env before config (which reads env vars at import time)
-from dotenv import load_dotenv
-
-load_dotenv(override=False)
-
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
 from google.adk.runners import Runner
@@ -26,8 +21,20 @@ from automation.seloger_form import fill_seloger_form
 from config import settings
 from utils import gmail
 
+# Load .env before config (which reads env vars at import time)
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# ── Cloud Trace (only when running in GCP with Vertex AI backend) ─────────────
+if os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").upper() == "TRUE":
+    from google.adk import telemetry
+    from google.adk.telemetry import google_cloud
+
+    _hooks = google_cloud.get_gcp_exporters(enable_cloud_tracing=True)
+    telemetry.maybe_set_otel_providers(otel_hooks_to_setup=[_hooks])
 
 # ── ADK runtime ───────────────────────────────────────────────────────────────
 _session_service = InMemorySessionService()
@@ -51,6 +58,7 @@ app = FastAPI(title="rental-agent", lifespan=lifespan)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _verify_pubsub_token(authorization: str | None, request_url: str) -> bool:
     """Verify the OIDC bearer token sent by Cloud Pub/Sub on push deliveries."""
     if not authorization or not authorization.startswith("Bearer "):
@@ -64,11 +72,17 @@ def _verify_pubsub_token(authorization: str | None, request_url: str) -> bool:
 
         # Cloud Run terminates SSL/TLS and forwards the request via HTTP.
         # We need to verify against the HTTPS endpoint if it was forwarded or if it's the public URL.
-        if request_url.startswith("http://") and "localhost" not in request_url and "127.0.0.1" not in request_url:
+        if (
+            request_url.startswith("http://")
+            and "localhost" not in request_url
+            and "127.0.0.1" not in request_url
+        ):
             request_url = request_url.replace("http://", "https://", 1)
 
-        token = authorization[len("Bearer "):]
-        id_token.verify_oauth2_token(token, google_requests.Request(), audience=request_url)
+        token = authorization[len("Bearer ") :]
+        id_token.verify_oauth2_token(
+            token, google_requests.Request(), audience=request_url
+        )
         return True
     except Exception as e:
         logger.error(f"Pub/Sub token verification failed: {e}")
@@ -137,6 +151,7 @@ def _html_page(message: str, color: str = "#333") -> Response:
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
+
 @app.post("/pubsub/push")
 async def receive_pubsub_push(request: Request) -> Response:
     """
@@ -155,9 +170,7 @@ async def receive_pubsub_push(request: Request) -> Response:
         return Response(status_code=204)
 
     try:
-        payload = json.loads(
-            base64.urlsafe_b64decode(encoded + "==").decode("utf-8")
-        )
+        payload = json.loads(base64.urlsafe_b64decode(encoded + "==").decode("utf-8"))
     except Exception:
         logger.warning("Could not decode Pub/Sub message data")
         return Response(status_code=204)
@@ -172,7 +185,9 @@ async def receive_pubsub_push(request: Request) -> Response:
         logger.exception("Failed to fetch Gmail history")
         return Response(status_code=204)
 
-    logger.info("Pub/Sub push: historyId=%s messages_found=%d", history_id, len(messages))
+    logger.info(
+        "Pub/Sub push: historyId=%s messages_found=%d", history_id, len(messages)
+    )
 
     for message in messages:
         sender = gmail.get_sender(message)
@@ -227,7 +242,9 @@ async def approve(token: str, background_tasks: BackgroundTasks) -> Response:
     data = doc.to_dict()
 
     if data["status"] != "pending":
-        return _html_page(f"This request has already been <strong>{data['status']}</strong>.")
+        return _html_page(
+            f"This request has already been <strong>{data['status']}</strong>."
+        )
 
     if data["expiresAt"] < datetime.now(tz=timezone.utc):
         raise HTTPException(status_code=410, detail="Approval request has expired")
@@ -262,7 +279,9 @@ async def reject(token: str) -> Response:
 
     data = doc.to_dict()
     if data["status"] != "pending":
-        return _html_page(f"This request has already been <strong>{data['status']}</strong>.")
+        return _html_page(
+            f"This request has already been <strong>{data['status']}</strong>."
+        )
 
     doc_ref.update({"status": "rejected", "rejectedAt": datetime.now(tz=timezone.utc)})
     return _html_page("✗ Listing rejected.", color="#c62828")
@@ -283,4 +302,3 @@ async def health() -> dict:
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=False)
-

@@ -96,6 +96,11 @@ resource "google_cloud_run_v2_service" "app" {
         name  = "SECRET_USER_NAME"
         value = var.secret_ids.user_name
       }
+
+      env {
+        name  = "ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS"
+        value = "true"
+      }
     }
   }
 

@@ -76,7 +76,9 @@ def create_approval_request(
     )
     logger.info(
         "Approval request created",
-        extra={"json_fields": {"token": token, "listing_url": listing_url, "score": score}},
+        extra={
+            "json_fields": {"token": token, "listing_url": listing_url, "score": score}
+        },
     )
     return token
 
