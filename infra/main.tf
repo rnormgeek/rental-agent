@@ -20,12 +20,11 @@ resource "google_pubsub_topic_iam_member" "gmail_push_publisher" {
 }
 
 resource "google_firestore_database" "default" {
-  project     = var.project_id
-  name        = "(default)"
-  location_id = var.region
-  type        = "FIRESTORE_NATIVE"
-
-  depends_on = [google_project_service.required]
+  project             = var.project_id
+  name                = "(default)"
+  location_id         = var.region
+  type                = "FIRESTORE_NATIVE"
+  depends_on          = [google_project_service.required]
 }
 
 resource "google_storage_bucket" "screenshots" {
@@ -45,6 +44,16 @@ resource "google_service_account" "app" {
   display_name = "Rental Agent Service Account"
 
   depends_on = [google_project_service.required]
+}
+
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+resource "google_service_account_iam_member" "pubsub_token_creator" {
+  service_account_id = google_service_account.app.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "app_roles" {

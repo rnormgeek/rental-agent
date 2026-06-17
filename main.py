@@ -51,7 +51,7 @@ app = FastAPI(title="rental-agent", lifespan=lifespan)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _verify_pubsub_token(authorization: str | None) -> bool:
+def _verify_pubsub_token(authorization: str | None, request_url: str) -> bool:
     """Verify the OIDC bearer token sent by Cloud Pub/Sub on push deliveries."""
     if not authorization or not authorization.startswith("Bearer "):
         return False
@@ -62,11 +62,16 @@ def _verify_pubsub_token(authorization: str | None) -> bool:
         from google.auth.transport import requests as google_requests
         from google.oauth2 import id_token
 
+        # Cloud Run terminates SSL/TLS and forwards the request via HTTP.
+        # We need to verify against the HTTPS endpoint if it was forwarded or if it's the public URL.
+        if request_url.startswith("http://") and "localhost" not in request_url and "127.0.0.1" not in request_url:
+            request_url = request_url.replace("http://", "https://", 1)
+
         token = authorization[len("Bearer "):]
-        audience = f"{settings.SERVICE_BASE_URL}/pubsub/push"
-        id_token.verify_oauth2_token(token, google_requests.Request(), audience=audience)
+        id_token.verify_oauth2_token(token, google_requests.Request(), audience=request_url)
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Pub/Sub token verification failed: {e}")
         return False
 
 
@@ -141,7 +146,7 @@ async def receive_pubsub_push(request: Request) -> Response:
     Always returns 2xx so Pub/Sub does not retry on application errors.
     """
     auth = request.headers.get("Authorization")
-    if not _verify_pubsub_token(auth):
+    if not _verify_pubsub_token(auth, str(request.url)):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     body = await request.json()
@@ -167,9 +172,12 @@ async def receive_pubsub_push(request: Request) -> Response:
         logger.exception("Failed to fetch Gmail history")
         return Response(status_code=204)
 
+    logger.info("Pub/Sub push: historyId=%s messages_found=%d", history_id, len(messages))
+
     for message in messages:
         sender = gmail.get_sender(message)
         if not any(s in sender for s in settings.RENTAL_ALERT_SENDERS):
+            logger.info("Skipping message from non-allowlisted sender: %s", sender)
             continue
 
         html_body = gmail.get_html_body(message)

@@ -11,7 +11,7 @@ resource "google_pubsub_subscription" "rental_emails_push" {
 
     oidc_token {
       service_account_email = google_service_account.app.email
-      audience              = local.integration_service_url
+      audience              = "${local.integration_service_url}/pubsub/push"
     }
   }
 

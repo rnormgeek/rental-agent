@@ -7,7 +7,7 @@ MIN_SCORE_TO_NOTIFY: int = int(os.getenv("MIN_SCORE_TO_NOTIFY", "50"))
 
 # ── GCP ───────────────────────────────────────────────────────────────────────
 GOOGLE_CLOUD_PROJECT: str = os.environ["GOOGLE_CLOUD_PROJECT"]
-GOOGLE_CLOUD_LOCATION: str = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+GOOGLE_CLOUD_LOCATION: str = os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west1")
 
 # ── Firestore ─────────────────────────────────────────────────────────────────
 FIRESTORE_COLLECTION: str = os.getenv("FIRESTORE_COLLECTION", "approvals")

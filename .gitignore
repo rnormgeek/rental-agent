@@ -11,3 +11,7 @@ dist/
 .terraform.*
 terraform.tfstate*
 terraform.tfvars
+
+# secrets
+client_secret_*
+credentials.json
