@@ -15,3 +15,5 @@ terraform.tfvars
 # secrets
 client_secret_*
 credentials.json
+
+message_template.txt
